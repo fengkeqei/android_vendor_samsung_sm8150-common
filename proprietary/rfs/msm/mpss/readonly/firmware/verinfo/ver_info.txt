@@ -1,0 +1,12 @@
+{
+    "Image_Build_IDs": {
+        "common": "SM8150.LA.1.0.r1-00450-STD.PROD-1", 
+        "modem": "MPSS.HE.1.0.r11-00002-SM8150_GEN_PACK-1"
+    }, 
+    "Metabuild_Info": {
+        "Meta_Build_ID": "SM8150.LA.1.0.r1-00450-STD.PROD-1", 
+        "Product_Flavor": "asic", 
+        "Time_Stamp": "2023-05-16 03:40:38"
+    }, 
+    "Version": "1.0"
+}

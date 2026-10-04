@@ -1,0 +1,5 @@
+/home/dpi/code/modem_proc/mcfg/configs/mcfg_sw/generic/China/CMCC/Commercial/Volte_OpenMkt/mcfg_sw.mbn
+/home/dpi/code/modem_proc/mcfg/configs/mcfg_sw/generic/China/CT/Commercial/VoLTE_OpenMkt/mcfg_sw.mbn
+/home/dpi/code/modem_proc/mcfg/configs/mcfg_sw/generic/China/CU/Commercial/OpenMkt/mcfg_sw.mbn
+/home/dpi/code/modem_proc/mcfg/configs/mcfg_sw/generic/China/Other/Commercial/mcfg_sw.mbn
+/home/dpi/code/modem_proc/mcfg/configs/mcfg_sw/generic/LATAM/3GPP/Commercial/mcfg_sw.mbn

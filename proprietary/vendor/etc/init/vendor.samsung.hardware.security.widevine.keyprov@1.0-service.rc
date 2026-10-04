@@ -1,0 +1,6 @@
+service vendor.wvkprov_server_hal /vendor/bin/vendor.samsung.hardware.security.widevine.keyprov@1.0-service
+    oneshot
+    disabled
+    class core
+    user system
+    group system drm drmrpc

@@ -1,0 +1,6 @@
+service authfwserv /vendor/bin/hw/vendor.samsung.hardware.authfw@1.0-service
+    class hal
+    user system
+    group system
+    oneshot
+    disabled

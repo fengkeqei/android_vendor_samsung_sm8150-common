@@ -58,7 +58,18 @@ on charger && property:ro.debuggable=1
     mkdir /config/usb_gadget/g1/configs/b.1/strings/0x409 0770
     write /config/usb_gadget/g1/configs/b.1/MaxPower 900
     symlink /config/usb_gadget/g1/configs/b.1 /config/usb_gadget/g1/os_desc/b.1
-    mount functionfs adb /dev/usb-ffs/adb uid=2000,gid=2000
+# v115: this kernel's functionfs VFS layer (ffs_fs_mount) crashes with a
+# NULL dereference as soon as the mount carries option arguments
+# (uid=/gid=/rmode=/fmode=/no_disconnect=). Boot log from 2026-11-02:
+#   Unable to handle kernel NULL pointer dereference at virtual address 00000170
+#   Process init (pid: 1)   pc : ffs_fs_mount+0x3c8/0x5bc
+#   Call trace: ffs_fs_mount -> mount_fs -> vfs_kern_mount -> do_mount -> SyS_mount
+# init dies, the kernel panics and the device hardware-resets in a loop.
+# A bare "mount functionfs <name> <dir>" is fine (that is how adb came up in
+# v112), so every functionfs mount below is reduced to the bare form and the
+# diag/mtp/ptp mounts are dropped entirely: with sys.usb.config pinned to
+# "adb" they were never used, and each of them was a crash waiting to happen.
+    mount functionfs adb /dev/usb-ffs/adb
 #    exec u:r:vendor_qti_init_shell:s0 -- /vendor/bin/init.qcom.usb.sh
     write /sys/class/android_usb/android0/f_ffs/aliases adb
     setprop sys.usb.config adb
@@ -124,13 +135,13 @@ on boot
     symlink /config/usb_gadget/g1/configs/b.1 /config/usb_gadget/g1/os_desc/b.1
     mkdir /dev/usb-ffs 0775 shell system
     mkdir /dev/usb-ffs/adb 0770 shell system
-    mount functionfs adb /dev/usb-ffs/adb uid=2000,gid=1000,rmode=0770,fmode=0660
+    mount functionfs adb /dev/usb-ffs/adb
     mkdir /dev/ffs-diag 0770 shell system
-    mount functionfs diag /dev/ffs-diag uid=2000,gid=1000,rmode=0770,fmode=0660,no_disconnect=1
+    # disabled (v115): mount functionfs diag /dev/ffs-diag uid=2000,gid=1000,rmode=0770,fmode=0660,no_disconnect=1
     mkdir /dev/ffs-diag-1 0770 shell system
-    mount functionfs diag_mdm /dev/ffs-diag-1 uid=2000,gid=1000,rmode=0770,fmode=0660,no_disconnect=1
+    # disabled (v115): mount functionfs diag_mdm /dev/ffs-diag-1 uid=2000,gid=1000,rmode=0770,fmode=0660,no_disconnect=1
     mkdir /dev/ffs-diag-2 0770 shell system
-    mount functionfs diag_mdm2 /dev/ffs-diag-2 uid=2000,gid=1000,rmode=0770,fmode=0660,no_disconnect=1
+    # disabled (v115): mount functionfs diag_mdm2 /dev/ffs-diag-2 uid=2000,gid=1000,rmode=0770,fmode=0660,no_disconnect=1
     setprop sys.usb.mtp.device_type 3
     setprop vendor.usb.controller ${sys.usb.controller}
     exec u:r:vendor_qti_init_shell:s0 -- /vendor/bin/init.qcom.usb.sh
@@ -162,9 +173,9 @@ on boot
    mkdir /config/usb_gadget/g1/functions/ffs.mtp
    mkdir /config/usb_gadget/g1/functions/ffs.ptp
    mkdir /dev/usb-ffs/mtp 0770 mtp mtp
-   mount functionfs mtp /dev/usb-ffs/mtp rmode=0770,fmode=0660,uid=1024,gid=1024,no_disconnect=1
+   # disabled (v115): mount functionfs mtp /dev/usb-ffs/mtp rmode=0770,fmode=0660,uid=1024,gid=1024,no_disconnect=1
    mkdir /dev/usb-ffs/ptp 0770 mtp mtp
-   mount functionfs ptp /dev/usb-ffs/ptp rmode=0770,fmode=0660,uid=1024,gid=1024,no_disconnect=1
+   # disabled (v115): mount functionfs ptp /dev/usb-ffs/ptp rmode=0770,fmode=0660,uid=1024,gid=1024,no_disconnect=1
 
 #on property:persist.vendor.usb.config=*
 #    setprop persist.sys.usb.config ${persist.vendor.usb.config}

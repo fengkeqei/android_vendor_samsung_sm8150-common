@@ -56,8 +56,12 @@
 /dev/block/bootdevice/by-name/spu	/spu	ext4	noatime,nosuid,nodev,noauto_da_alloc,discard,journal_checksum,data=ordered,errors=panic	nofail,check
 
 # Samsung ODE
-/dev/block/bootdevice/by-name/keydata	/keydata	ext4	noatime,nosuid,nodev,noauto_da_alloc,discard,journal_checksum,data=ordered,errors=panic	wait,check,nofail
-/dev/block/bootdevice/by-name/keyrefuge	/keyrefuge	ext4	noatime,nosuid,nodev,noauto_da_alloc,discard,journal_checksum,data=ordered,errors=panic	wait,check,nofail
+# avium: keydata/keyrefuge have no filesystem on this device, but stock fstab
+# marks them `check` and `errors=panic`; fs_mgr then panics the kernel when the
+# (empty) partition fails to mount. Drop both, keep nofail. This used to be a
+# post-build debugfs edit in inject_vendor_hidl_libs.sh.
+/dev/block/bootdevice/by-name/keydata	/keydata	ext4	noatime,nosuid,nodev,noauto_da_alloc,discard,journal_checksum,data=ordered	wait,nofail
+/dev/block/bootdevice/by-name/keyrefuge	/keyrefuge	ext4	noatime,nosuid,nodev,noauto_da_alloc,discard,journal_checksum,data=ordered	wait,nofail
 
 # VOLD:samsung/common/fstab.samsung
 #/devices/platform/soc/1da4000.ufshc_card/host*           /storage/sdcard1       vfat    nosuid,nodev                                         wait,voldmanaged=sdcard1:auto,encryptable=footer

@@ -1,6 +1,18 @@
+# Avium beyond1q: skpm (Samsung Key Provisioning Manager) HAL.
+#
+# The fingerprint key chain is
+#   BAuth_GetK_From_KM -> skm/authhat TA -> skpm-provisioned EFS keys
+# and the blobs it needs (/efs/sec_efs/skpm_OTA_WBv2_FIDO_Bound_FP_ECC_P256 and
+# friends) are only unwrappable through this HAL.
+#
+# Stock ships it as `disabled` + `oneshot`, i.e. started on demand by whichever
+# keymaster path needs it. Nothing on this A16 port ever asks for it, so it must
+# come up with the rest of the HAL class instead.
+#
+# drmrpc (gid 1026) is required for the same reason as gatekeeper and the
+# fingerprint HAL: /dev/qseecom is system:drmrpc and the TA is loaded through it.
 service skpm_hal /vendor/bin/hw/vendor.samsung.hardware.security.skpm@1.0-service
     class hal
     user system
-    group system
+    group system drmrpc
     oneshot
-    disabled

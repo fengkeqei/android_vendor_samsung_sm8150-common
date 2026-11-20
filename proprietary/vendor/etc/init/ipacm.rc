@@ -25,10 +25,23 @@
 # OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
 # IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-service vendor.ipacm /system/vendor/bin/ipacm
+# Avium beyond1q: /system/vendor/bin/ipacm is a pre-Treble path. On A16 the
+# vendor partition is /vendor and /system/vendor does not exist, so the service
+# would exec nothing and silently never start. Without vendor.ipacm the IPA data
+# path stays uninitialised, ril.cidManager.initiated never leaves 0 (stock: 1)
+# and the modem produces no RF measurement at all -- every RAT reports RSSI
+# 0x0000, CellInfo is empty and LTE can never register.
+#
+# /data/vendor/ipa comes from the AOSP ipacm.rc in
+# vendor/qcom/opensource/data-ipa-cfg-mgr-legacy-um, which is not built on this
+# port (its source does not compile against A16 bionic). Create it here so the
+# cache manager finds a writable state directory.
+service vendor.ipacm /vendor/bin/ipacm
     class main
     user radio
     group radio inet
 
-on post-fs
+on post-fs-data
+    mkdir /data/vendor/ipa 0770 radio radio
+    chmod 0770 /data/vendor/ipa
     start vendor.ipacm

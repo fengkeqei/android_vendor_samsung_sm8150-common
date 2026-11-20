@@ -1,4 +1,13 @@
-service vendor.keymaster-4-0 /vendor/bin/hw/android.hardware.keymaster@4.0-service
+# v131 asset (re-applied after BK rollback): the stock binary here is
+# Samsung's "SB Keymaster 4.0" blob. On A16 (no VNDK, AIDL-only
+# servicemanager) its HIDL registerService() fails with
+#   Abort message: 'Could not register service for SB Keymaster 4.0 (-2147483648)'
+# and the 5-second crash loop joins the early_hal storm that keeps boot
+# from finishing. The AOSP software implementation provides the same
+# android.hardware.keymaster@4.0::IKeymasterDevice/default instance and
+# links cleanly against the A16 HIDL runtime (module:
+# android.hardware.keymaster@4.0-service_aosp, see common.mk:370).
+service vendor.keymaster-4-0 /vendor/bin/hw/android.hardware.keymaster@4.0-service_aosp
     class early_hal
     user system
     group system drmrpc

@@ -14299,6 +14299,27 @@ cc_prebuilt_binary {
 	soc_specific: true,
 }
 
+// Stock Samsung keymaster 4.0 service: links libskeymaster4device (TEE) and
+// calls skeymaster::CreateSKeymasterDevice, the only implementation that can
+// unwrap the TEE-bound FBE key. Its rc creates /mnt/vendor/efs/DAK.
+cc_prebuilt_binary {
+	name: "android.hardware.keymaster@4.0-service",
+	owner: "samsung",
+	target: {
+		android_arm64: {
+			srcs: ["proprietary/vendor/bin/hw/android.hardware.keymaster@4.0-service"],
+		},
+	},
+	compile_multilib: "64",
+	check_elf_files: false,
+	strip: {
+		none: true,
+	},
+	prefer: true,
+	relative_install_path: "hw",
+	soc_specific: true,
+}
+
 cc_prebuilt_binary {
 	name: "android.hardware.keymaster@4.0-strongbox-service-qti",
 	owner: "samsung",
@@ -15196,6 +15217,55 @@ cc_prebuilt_binary {
 	strip: {
 		none: true,
 	},
+	prefer: true,
+	soc_specific: true,
+}
+
+// Avium beyond1q: ipacm (IPA cache manager) was missing from the image while
+// its companion ipacm-diag shipped. Without vendor.ipacm the IPA data path is
+// never initialised, ril.cidManager.initiated stays 0 (stock: 1) and the modem
+// produces no RF measurement at all -- every RAT reports RSSI 0x0000 and
+// CellInfo is empty, so LTE can never register. The stock ROM on the same
+// device with the same modemst/EFS reports rsrp=-77, which is what pinned this
+// down (see STOCK_CAPTURE_20261117.md).
+//
+// This ships the stock binary rather than building vendor/qcom/opensource/
+// data-ipa-cfg-mgr-legacy-um/ipacm. That source module does not compile against
+// A16 bionic: both ipacm and its libipanat dependency pull in
+// qti_kernel_headers, whose linux/sched/types.h defines `struct sched_param`
+// and collides with the identical definition in bionic's sched.h
+// ("redefinition of 'sched_param'"). The stock libs it needs are already in
+// /vendor/lib64 (liboffloadhal, libipanat, libnfnetlink,
+// libnetfilter_conntrack, the tetheroffload HIDL interfaces,
+// libhardware_legacy -- all from vendor_native_prebuilts.mk and the HIDL
+// injector), so the prebuilt binary resolves at runtime with nothing else
+// rebuilt.
+//
+// No shared_libs on purpose: Soong cannot walk a prebuilt's DT_NEEDED anyway,
+// and declaring them would pull the broken source modules back into the build.
+//
+// The module is avium_ipacm with stem "ipacm", not "ipacm": the source module
+// of that name still exists and a duplicate name aborts the build. The stem
+// makes it install as /vendor/bin/ipacm, which is what ipacm.rc execs.
+cc_prebuilt_binary {
+	name: "avium_ipacm",
+	stem: "ipacm",
+	owner: "samsung",
+	target: {
+		android_arm64: {
+			srcs: ["proprietary/vendor/bin/ipacm"],
+		},
+	},
+	compile_multilib: "64",
+	strip: {
+		none: true,
+	},
+	// Soong's ELF checker insists that every DT_NEEDED of a prebuilt appear in
+	// shared_libs. Listing them is not an option here (see the note above: it
+	// pulls the broken source modules back in), so disable the check. The
+	// dependencies are satisfied at runtime by the stock libraries already in
+	// /vendor/lib64.
+	check_elf_files: false,
 	prefer: true,
 	soc_specific: true,
 }
@@ -16206,3 +16276,78 @@ cc_prebuilt_library_shared {
 }
 
 
+
+// Avium beyond1q: arm64 vendor-variant deps for the Samsung C2 codec HAL.
+// samsung.software.media.c2@1.0-service links vendor.samsung.hardware...
+// media.c2 helpers that need these VNDK-style libs in /vendor/lib64.
+// Built from the A16 tree's android_vendor_arm64_* variants (see
+// TODOLIST_20261114.md A1). Hand-appended; setup-makefiles.sh regeneration
+// must keep this block (or re-add it from proprietary-files.txt).
+cc_prebuilt_library_shared {
+	name: "libstagefright_bufferqueue_helper_avium64",
+	// avium: the correct-named file is installed by the AOSP module /
+	// inject_vendor_hidl_libs.sh; this prebuilt only documents the vendor
+	// variant and must not create a second install rule (Kati override error).
+	installable: false,
+	owner: "samsung",
+	// Install under the real SONAME; the default stem would append the module
+	// name and ship libstagefright_bufferqueue_helper_avium64.so, which the C2
+	// service never finds.
+	stem: "libstagefright_bufferqueue_helper",
+	strip: {
+		none: true,
+	},
+	target: {
+		android_arm64: {
+			srcs: ["proprietary/vendor/lib64/libstagefright_bufferqueue_helper.so"],
+		},
+	},
+	compile_multilib: "64",
+	check_elf_files: false,
+	prefer: true,
+	soc_specific: true,
+	}
+
+cc_prebuilt_library_shared {
+	name: "android_hidl_token_1_0_utils_avium64",
+	// avium: the correct-named file is installed by the AOSP module /
+	// inject_vendor_hidl_libs.sh; this prebuilt only documents the vendor
+	// variant and must not create a second install rule (Kati override error).
+	installable: false,
+	owner: "samsung",
+	stem: "android.hidl.token@1.0-utils",
+	strip: {
+		none: true,
+	},
+	target: {
+		android_arm64: {
+			srcs: ["proprietary/vendor/lib64/android.hidl.token@1.0-utils.so"],
+		},
+	},
+	compile_multilib: "64",
+	check_elf_files: false,
+	prefer: true,
+	soc_specific: true,
+}
+
+cc_prebuilt_library_shared {
+	name: "android_hidl_token_1_0_avium64",
+	// avium: the correct-named file is installed by the AOSP module /
+	// inject_vendor_hidl_libs.sh; this prebuilt only documents the vendor
+	// variant and must not create a second install rule (Kati override error).
+	installable: false,
+	owner: "samsung",
+	stem: "android.hidl.token@1.0",
+	strip: {
+		none: true,
+	},
+	target: {
+		android_arm64: {
+			srcs: ["proprietary/vendor/lib64/android.hidl.token@1.0.so"],
+		},
+	},
+	compile_multilib: "64",
+	check_elf_files: false,
+	prefer: true,
+	soc_specific: true,
+}

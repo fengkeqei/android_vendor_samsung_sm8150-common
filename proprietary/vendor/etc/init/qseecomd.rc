@@ -10,3 +10,8 @@ service vendor.qseecomd /vendor/bin/qseecomd
     class core
     user root
     group root
+    # avium: stderr -> kmsg_debug. qseecomd's only failure evidence is the
+    # dynamic linker's "CANNOT LINK EXECUTABLE" message, which never reaches
+    # logd when the process dies during early boot (logd's /data/misc/logd is
+    # not writable yet at that point).
+    stdio_to_kmsg

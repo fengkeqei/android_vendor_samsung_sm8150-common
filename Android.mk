@@ -7,3 +7,8 @@ LOCAL_PATH := $(call my-dir)
 ifneq ($(filter r5q,$(TARGET_DEVICE)),)
 
 endif
+
+# NOTE: this file is NOT parsed by the build. AOSP only auto-includes
+# device/*/*/Android.mk, so vendor/<oem>/<common>/Android.mk never gets read.
+# The SemTelephony_RIL prebuilt lives in device/samsung/beyond1q/Android.mk,
+# which is included.

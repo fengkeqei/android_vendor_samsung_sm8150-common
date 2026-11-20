@@ -1076,13 +1076,24 @@ on property:vendor.opengles.version=*
 on property:vendor.gpu.available_frequencies=*
     setprop ro.vendor.gpu.available_frequencies ${vendor.gpu.available_frequencies}
 
-service vendor.audio-hal /vendor/bin/hw/android.hardware.audio.service
-    override
-    class hal
-    user audioserver
-    # media gid needed for /dev/fm (radio) and for /data/misc/media (tee)
-    group audio camera drmrpc inet media mediadrm net_bt net_bt_admin net_bw_acct oem_2901 wakelock
-    capabilities BLOCK_SUSPEND
-    ioprio rt 4
-    writepid /dev/cpuset/foreground/tasks /dev/stune/foreground/tasks
-    onrestart restart audioserver
+# avium: the legacy HIDL audio service must not start.
+# The only workable audio HAL here is Samsung's 32-bit
+# audio.primary.msmnile.so, driven by the AIDL HAL
+# (android.hardware.audio.service-aidl.avium, 32-bit + StreamLegacy).
+# The AOSP HIDL service in this image is 64-bit and cannot load the 32-bit
+# blob; on A16 libbinder it also aborts in setThreadPoolMaxThreadCount()
+# because vndservicemanager makes ProcessState start the /dev/vndbinder
+# pool first.  Each crash ran the old `onrestart restart audioserver`, and
+# audioserver.rc restarted the HAL in turn: a 5-second mutual kill loop
+# that kept audio completely unavailable.  A16 framework only speaks AIDL,
+# so the HIDL service is dead weight - keep it out of init entirely.
+#service vendor.audio-hal /vendor/bin/hw/android.hardware.audio.service
+#    override
+#    class hal
+#    user audioserver
+#    # media gid needed for /dev/fm (radio) and for /data/misc/media (tee)
+#    group audio camera drmrpc inet media mediadrm net_bt net_bt_admin net_bw_acct oem_2901 wakelock
+#    capabilities BLOCK_SUSPEND
+#    ioprio rt 4
+#    writepid /dev/cpuset/foreground/tasks /dev/stune/foreground/tasks
+#    onrestart restart audioserver

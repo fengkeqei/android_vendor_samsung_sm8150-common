@@ -5,6 +5,21 @@
 PRODUCT_SOONG_NAMESPACES += \
     vendor/samsung/sm8150-common
 
+# v131 asset (re-applied after BK rollback): the proprietary stock (A11-era,
+# 150-line) audio_policy_configuration.xml copy line is intentionally ABSENT
+# from this PRODUCT_COPY_FILES list. The A16 AIDL audio wrapper
+# (android.hardware.audio.service-aidl) parses the vendor config with
+# convertCollectionToAidl(); the stock module layout makes it abort with
+# "Function: convertCollectionToAidl Line: 128 Failed result (BAD_VALUE)"
+# in a 5-second crash loop that keeps boot from finishing. common.mk:627
+# ships the AOSP device-tree 221-line version; if the proprietary line is
+# re-added here, kati last-wins hijacks it back to the broken stock file.
+#
+# avium: proprietary/vendor/etc/init/android.hardware.audio.service.rc is
+# deliberately NOT copied. The AIDL HAL (android.hardware.audio.service-aidl
+# .avium) owns the audio slot; the stock HIDL rc plus init.qcom.rc's service
+# block created a 5 s mutual restart loop with audioserver (no audio at all).
+# This used to be a post-build rename to .rc.disabled in fix_vendor_mountpoints.
 PRODUCT_COPY_FILES += \
     vendor/samsung/sm8150-common/proprietary/vendor/etc/SoundBoosterParam.txt:$(TARGET_COPY_OUT_VENDOR)/etc/SoundBoosterParam.txt \
     vendor/samsung/sm8150-common/proprietary/vendor/etc/VslMesDetector/MesDetectorBlur.tflite:$(TARGET_COPY_OUT_VENDOR)/etc/VslMesDetector/MesDetectorBlur.tflite \
@@ -20,7 +35,17 @@ PRODUCT_COPY_FILES += \
     vendor/samsung/sm8150-common/proprietary/vendor/etc/audconf/OPEN/Hdmi_cal.acdb:$(TARGET_COPY_OUT_VENDOR)/etc/audconf/OPEN/Hdmi_cal.acdb \
     vendor/samsung/sm8150-common/proprietary/vendor/etc/audconf/OPEN/Headset_cal.acdb:$(TARGET_COPY_OUT_VENDOR)/etc/audconf/OPEN/Headset_cal.acdb \
     vendor/samsung/sm8150-common/proprietary/vendor/etc/audconf/OPEN/Speaker_cal.acdb:$(TARGET_COPY_OUT_VENDOR)/etc/audconf/OPEN/Speaker_cal.acdb \
+    vendor/samsung/sm8150-common/proprietary/vendor/etc/audconf/OPEN/Bluetooth_cal.acdb:$(TARGET_COPY_OUT_VENDOR)/etc/acdbdata/Bluetooth_cal.acdb \
+    vendor/samsung/sm8150-common/proprietary/vendor/etc/audconf/OPEN/Codec_cal.acdb:$(TARGET_COPY_OUT_VENDOR)/etc/acdbdata/Codec_cal.acdb \
+    vendor/samsung/sm8150-common/proprietary/vendor/etc/audconf/OPEN/General_cal.acdb:$(TARGET_COPY_OUT_VENDOR)/etc/acdbdata/General_cal.acdb \
+    vendor/samsung/sm8150-common/proprietary/vendor/etc/audconf/OPEN/Global_cal.acdb:$(TARGET_COPY_OUT_VENDOR)/etc/acdbdata/Global_cal.acdb \
+    vendor/samsung/sm8150-common/proprietary/vendor/etc/audconf/OPEN/Handset_cal.acdb:$(TARGET_COPY_OUT_VENDOR)/etc/acdbdata/Handset_cal.acdb \
+    vendor/samsung/sm8150-common/proprietary/vendor/etc/audconf/OPEN/Hdmi_cal.acdb:$(TARGET_COPY_OUT_VENDOR)/etc/acdbdata/Hdmi_cal.acdb \
+    vendor/samsung/sm8150-common/proprietary/vendor/etc/audconf/OPEN/Headset_cal.acdb:$(TARGET_COPY_OUT_VENDOR)/etc/acdbdata/Headset_cal.acdb \
+    vendor/samsung/sm8150-common/proprietary/vendor/etc/audconf/OPEN/Speaker_cal.acdb:$(TARGET_COPY_OUT_VENDOR)/etc/acdbdata/Speaker_cal.acdb \
+    vendor/samsung/sm8150-common/proprietary/vendor/etc/audconf/OPEN/workspaceFile.qwsp:$(TARGET_COPY_OUT_VENDOR)/etc/acdbdata/workspaceFile.qwsp \
     vendor/samsung/sm8150-common/proprietary/vendor/etc/audconf/OPEN/workspaceFile.qwsp:$(TARGET_COPY_OUT_VENDOR)/etc/audconf/OPEN/workspaceFile.qwsp \
+    vendor/samsung/sm8150-common/proprietary/vendor/bin/init.qcom.usb.sh:$(TARGET_COPY_OUT_VENDOR)/bin/init.qcom.usb.sh \
     vendor/samsung/sm8150-common/proprietary/vendor/etc/audio_configs.xml:$(TARGET_COPY_OUT_VENDOR)/etc/audio_configs.xml \
     vendor/samsung/sm8150-common/proprietary/vendor/etc/audio_configs_stock.xml:$(TARGET_COPY_OUT_VENDOR)/etc/audio_configs_stock.xml \
     vendor/samsung/sm8150-common/proprietary/vendor/etc/audio_effects.conf:$(TARGET_COPY_OUT_VENDOR)/etc/audio_effects.conf \
@@ -30,7 +55,6 @@ PRODUCT_COPY_FILES += \
     vendor/samsung/sm8150-common/proprietary/vendor/etc/audio_platform_info.xml:$(TARGET_COPY_OUT_VENDOR)/etc/audio_platform_info.xml \
     vendor/samsung/sm8150-common/proprietary/vendor/etc/audio_platform_info_diff.xml:$(TARGET_COPY_OUT_VENDOR)/etc/audio_platform_info_diff.xml \
     vendor/samsung/sm8150-common/proprietary/vendor/etc/audio_platform_info_qrd.xml:$(TARGET_COPY_OUT_VENDOR)/etc/audio_platform_info_qrd.xml \
-    vendor/samsung/sm8150-common/proprietary/vendor/etc/audio_policy_configuration.xml:$(TARGET_COPY_OUT_VENDOR)/etc/audio_policy_configuration.xml \
     vendor/samsung/sm8150-common/proprietary/vendor/etc/audio_policy_configuration_base.xml:$(TARGET_COPY_OUT_VENDOR)/etc/audio_policy_configuration_base.xml \
     vendor/samsung/sm8150-common/proprietary/vendor/etc/audio_policy_configuration_sec.xml:$(TARGET_COPY_OUT_VENDOR)/etc/audio_policy_configuration_sec.xml \
     vendor/samsung/sm8150-common/proprietary/vendor/etc/audio_policy_volumes.xml:$(TARGET_COPY_OUT_VENDOR)/etc/audio_policy_volumes.xml \
@@ -65,8 +89,9 @@ PRODUCT_COPY_FILES += \
     vendor/samsung/sm8150-common/proprietary/vendor/etc/init/android.hardware.drm@1.3-service.widevine.rc:$(TARGET_COPY_OUT_VENDOR)/etc/init/android.hardware.drm@1.3-service.widevine.rc \
     vendor/samsung/sm8150-common/proprietary/vendor/etc/init/android.hardware.dumpstate@1.1-service-lazy.rc:$(TARGET_COPY_OUT_VENDOR)/etc/init/android.hardware.dumpstate@1.1-service-lazy.rc \
     vendor/samsung/sm8150-common/proprietary/vendor/etc/init/android.hardware.health@2.1-service-samsung.rc:$(TARGET_COPY_OUT_VENDOR)/etc/init/android.hardware.health@2.1-service-samsung.rc \
-    vendor/samsung/sm8150-common/proprietary/vendor/etc/init/android.hardware.keymaster@4.0-strongbox-service-qti.rc:$(TARGET_COPY_OUT_VENDOR)/etc/init/android.hardware.keymaster@4.0-strongbox-service-qti.rc \
+    vendor/samsung/sm8150-common/proprietary/vendor/etc/init/android.hardware.keymaster@4.0-service.rc:$(TARGET_COPY_OUT_VENDOR)/etc/init/android.hardware.keymaster@4.0-service.rc \
     vendor/samsung/sm8150-common/proprietary/vendor/etc/init/android.hardware.neuralnetworks@1.3-service-qti.rc:$(TARGET_COPY_OUT_VENDOR)/etc/init/android.hardware.neuralnetworks@1.3-service-qti.rc \
+    vendor/samsung/sm8150-common/proprietary/vendor/etc/init/samsung.software.media.c2@1.0-service.rc:$(TARGET_COPY_OUT_VENDOR)/etc/init/samsung.software.media.c2@1.0-service.rc \
     vendor/samsung/sm8150-common/proprietary/vendor/etc/init/android.hardware.usb@1.3-service.coral.rc:$(TARGET_COPY_OUT_VENDOR)/etc/init/android.hardware.usb@1.3-service.coral.rc \
     vendor/samsung/sm8150-common/proprietary/vendor/etc/init/android.hardware.wifi@1.0-service.rc:$(TARGET_COPY_OUT_VENDOR)/etc/init/android.hardware.wifi@1.0-service.rc \
     vendor/samsung/sm8150-common/proprietary/vendor/etc/init/android.hardware.gnss@2.1-service-qti.rc:$(TARGET_COPY_OUT_VENDOR)/etc/init/android.hardware.gnss@2.1-service-qti.rc \
@@ -97,6 +122,7 @@ PRODUCT_COPY_FILES += \
     vendor/samsung/sm8150-common/proprietary/vendor/etc/init/init.vendor.sysfw.rc:$(TARGET_COPY_OUT_VENDOR)/etc/init/init.vendor.sysfw.rc \
     vendor/samsung/sm8150-common/proprietary/vendor/etc/init/init_thermal-engine.rc:$(TARGET_COPY_OUT_VENDOR)/etc/init/init_thermal-engine.rc \
     vendor/samsung/sm8150-common/proprietary/vendor/etc/init/ipa_fws.rc:$(TARGET_COPY_OUT_VENDOR)/etc/init/ipa_fws.rc \
+    vendor/samsung/sm8150-common/proprietary/vendor/etc/init/ipacm.rc:$(TARGET_COPY_OUT_VENDOR)/etc/init/ipacm.rc \
     vendor/samsung/sm8150-common/proprietary/vendor/etc/init/ipacm-diag.rc:$(TARGET_COPY_OUT_VENDOR)/etc/init/ipacm-diag.rc \
     vendor/samsung/sm8150-common/proprietary/vendor/etc/init/mutualex.rc:$(TARGET_COPY_OUT_VENDOR)/etc/init/mutualex.rc \
     vendor/samsung/sm8150-common/proprietary/vendor/etc/init/netmgrd.rc:$(TARGET_COPY_OUT_VENDOR)/etc/init/netmgrd.rc \
@@ -385,6 +411,15 @@ PRODUCT_COPY_FILES += \
 # module name; missing caused provider SIGSEGV + preview all-zero buffers =
 # green screen) and 32-bit QTI mapper impl (32-bit camera provider imports
 # gralloc buffers through it; missing made every preview buffer import fail).
+#
+# Avium beyond1q: android.hardware.health@2.1-samsung.xml is intentionally NOT
+# in the list below. Its HIDL block carries override="true", which makes VINTF
+# replace the AIDL android.hardware.health v4 declaration provided by
+# android.hardware.health-service.avium. BatteryService then resolves only
+# HIDL @2.1::IHealth/default, finds nothing (that stock binary has no init
+# service here), and reports present=false / level=0 / voltage=0 - the battery
+# looks missing even though the AIDL HAL runs fine. The Samsung extension
+# vendor.samsung.hardware.health is still declared by deviceManifest.xml.
 PRODUCT_PACKAGES += \
     btaudio_offload_if \
     com.samsung.sensor.imx316 \
@@ -458,7 +493,7 @@ PRODUCT_PACKAGES += \
     libq3dtools_esx \
     android.hardware.health@2.0-impl-2.1-samsung \
     audio.bluetooth_qti.default \
-    audio.a2dp.default \
+    audio.bluetooth.default \
     android.hardware.bluetooth.audio-V5-ndk \
     android.hardware.audio.common-V4-ndk \
     android.media.audio.common.types-V4-ndk \
@@ -1098,7 +1133,6 @@ PRODUCT_PACKAGES += \
     vklayer \
     android.hardware.dumpstate@1.1-service-lazy.xml \
     android.hardware.gnss@2.1-service-qti.xml \
-    android.hardware.health@2.1-samsung.xml \
     android.hardware.neuralnetworks@1.3-service-qti-hta.xml \
     android.hardware.neuralnetworks@1.3-service-qti.xml \
     android.hardware.usb@1.3-service.coral.xml \
@@ -1149,7 +1183,6 @@ PRODUCT_PACKAGES += \
     android.hardware.drm@1.3-service.widevine \
     android.hardware.dumpstate@1.1-service-lazy \
     android.hardware.health@2.1-service-samsung \
-    android.hardware.keymaster@4.0-strongbox-service-qti \
     android.hardware.neuralnetworks@1.3-service-qti \
     android.hardware.power.samsung-service \
     android.hardware.usb@1.3-service.coral \
@@ -1206,7 +1239,11 @@ PRODUCT_PACKAGES += \
     init.qti.qcv \
     install-recovery \
     iod \
+    avium_ipacm \
     ipacm-diag \
+    android.hardware.tetheroffload.config@1.0 \
+    android.hardware.tetheroffload.control@1.0 \
+    IPACM_cfg.xml \
     irsc_util \
     ks \
     loadalgo \
